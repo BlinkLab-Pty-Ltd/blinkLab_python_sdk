@@ -14,5 +14,5 @@ setup(
     description='Signal processing for Blinklab data',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    url='https://github.com/BlinkLab-Pty-Ltd/BlinkLab-python-sdk',
+    url='https://github.com/BlinkLab-Pty-Ltd/blinkLab_python_sdk',
 )
