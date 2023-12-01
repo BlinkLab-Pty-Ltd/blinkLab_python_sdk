@@ -1,2 +1,4 @@
 venv
 .idea
+blinklab_python_sdk/__pycache__/
+tests/__pycache__/
