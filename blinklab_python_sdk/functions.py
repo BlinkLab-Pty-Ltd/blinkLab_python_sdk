@@ -6,6 +6,10 @@ from .config import *
 import matplotlib.pyplot as plt
 
 
+def build_x_trace(length: int):
+    return np.arange(0, length * MS_PER_FRAME, MS_PER_FRAME)
+
+
 def update_config(**kwargs):
     for key, value in kwargs.items():
         if key in globals():
@@ -65,28 +69,32 @@ def is_short_trace(trace):
 def interpolate_trace(trace):
     if trace is None:
         return None
+
     return pd.Series(trace).interpolate().values
 
 
 def filter_trace(trace):
     if trace is None:
         return None
+
     b, a = signal.butter(2, 0.5, 'low')
-    trace = signal.filtfilt(b, a, trace)
-    return trace
+
+    return signal.filtfilt(b, a, trace)
 
 
 def normalize_trace(trace, min_val, max_percentile):
     if trace is None:
         return None
-    else:
-        range_val = max_percentile - min_val
-        return [(x - min_val) / range_val if range_val != 0 else 0 for x in trace]
+
+    range_val = max_percentile - min_val
+
+    return [(x - min_val) / range_val if range_val != 0 else 0 for x in trace]
 
 
 def baseline_correct_trace(trace):
     if trace is None:
         return None
+
     return trace - np.mean(trace[:BASELINE_LENGTH])
 
 
@@ -112,6 +120,7 @@ def get_max(trace, begin, end):
 
     return max_val
 
+
 def plot_median(
         data: pd.DataFrame,
         y_column: str,
@@ -121,46 +130,39 @@ def plot_median(
         y_max: float = 1,
         line: float = None
 ):
-    plot_df = data.copy()
-
-    if DROP_TONES:
-        plot_df = plot_df[plot_df['label'].apply(lambda x: 'tone' not in x)]
-
-    plot_df = plot_df[~(plot_df['has_invalid_nan_count'])]
-    plot_df = plot_df[~(plot_df['has_extreme_outliers'])]
-    plot_df = plot_df[~(plot_df['is_short_trace'])]
-
-
     plt.figure(figsize=(20, 4))
     plt.ylim(y_min, y_max)
     plt.title(y_column)
 
-    if split_by is None:
-        for _, row in plot_df.iterrows():
-            x_trace = row[x_column]
-            eye_trace = row[y_column]
-            plt.plot(x_trace, eye_trace, color='lightgray', alpha=0.2)
+    plot_df = data.copy()
+    plot_df = plot_df[~(plot_df['has_invalid_nan_count'])]
+    plot_df = plot_df[~(plot_df['has_extreme_outliers'])]
+    plot_df = plot_df[~(plot_df['is_short_trace'])]
 
-        median_values_filtered_df = np.nanmedian(np.stack(plot_df[y_column]), axis=0)
-        plt.plot(plot_df[x_column].iloc[0], median_values_filtered_df, label='Median', linewidth=2)
-    else:
-        for unique_value, unique_df in plot_df.groupby(split_by):
-            if not unique_df.empty:
-                median_values_filtered_df = np.nanmedian(np.stack(unique_df[y_column]), axis=0)
-                label = unique_df['label'].iloc[0]
+    max_length = max(plot_df[y_column].apply(len))
+    x_trace = build_x_trace(max_length)
 
-                for _, row in unique_df.iterrows():
-                    x_trace = row[x_column]
-                    eye_trace = row[y_column]
-                    plt.plot(x_trace, eye_trace, color='lightgray', alpha=0.2)
+    for unique_value, unique_df in plot_df.groupby(split_by):
+        if not unique_df.empty:
+            padded_arrays = []
+            for array in unique_df[y_column]:
+                padding = max_length - len(array)
+                padded_array = np.pad(array, (0, padding), 'constant',
+                                      constant_values=np.NaN)
+                padded_arrays.append(padded_array)
 
-                if label == 'noises: 1':
-                    median_pulse = np.nanmedian(np.stack(unique_df['pulse_max']), axis=0)
-                    plt.axhline(median_pulse)
+            label = unique_df['label'].iloc[0]
+            stacked = np.stack(padded_arrays)
+            median_values_filtered_df = np.nanmedian(stacked, axis=0)
 
-                plt.plot(x_trace, median_values_filtered_df, label=f'Median {label}', linewidth=2)
+            for eye_trace in padded_arrays:
+                plt.plot(x_trace, eye_trace, color='lightgray', alpha=0.2)
+
+            plt.plot(x_trace, median_values_filtered_df, label=f'Median {label}', linewidth=2)
+
     if line is not None:
         plt.axhline(line, color='red', label='Line')
+
     plt.axvspan(1500, 1550, color='blue')
     plt.axvspan(1620, 1670, color='red')
 
