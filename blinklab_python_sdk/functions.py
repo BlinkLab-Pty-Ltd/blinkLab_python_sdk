@@ -3,6 +3,7 @@ import pandas as pd
 import scipy.signal as signal
 import json
 from .config import *
+import matplotlib.pyplot as plt
 
 
 def update_config(**kwargs):
@@ -110,3 +111,58 @@ def get_max(trace, begin, end):
     max_val = np.max(trace[start_window:end_window])
 
     return max_val
+
+def plot_median(
+        data: pd.DataFrame,
+        y_column: str,
+        x_column: str,
+        split_by: str = None,
+        y_min: float = -0.1,
+        y_max: float = 1,
+        line: float = None
+):
+    plot_df = data.copy()
+
+    if DROP_TONES:
+        plot_df = plot_df[plot_df['label'].apply(lambda x: 'tone' not in x)]
+
+    plot_df = plot_df[~(plot_df['has_invalid_nan_count'])]
+    plot_df = plot_df[~(plot_df['has_extreme_outliers'])]
+    plot_df = plot_df[~(plot_df['is_short_trace'])]
+
+
+    plt.figure(figsize=(20, 4))
+    plt.ylim(y_min, y_max)
+    plt.title(y_column)
+
+    if split_by is None:
+        for _, row in plot_df.iterrows():
+            x_trace = row[x_column]
+            eye_trace = row[y_column]
+            plt.plot(x_trace, eye_trace, color='lightgray', alpha=0.2)
+
+        median_values_filtered_df = np.nanmedian(np.stack(plot_df[y_column]), axis=0)
+        plt.plot(plot_df[x_column].iloc[0], median_values_filtered_df, label='Median', linewidth=2)
+    else:
+        for unique_value, unique_df in plot_df.groupby(split_by):
+            if not unique_df.empty:
+                median_values_filtered_df = np.nanmedian(np.stack(unique_df[y_column]), axis=0)
+                label = unique_df['label'].iloc[0]
+
+                for _, row in unique_df.iterrows():
+                    x_trace = row[x_column]
+                    eye_trace = row[y_column]
+                    plt.plot(x_trace, eye_trace, color='lightgray', alpha=0.2)
+
+                if label == 'noises: 1':
+                    median_pulse = np.nanmedian(np.stack(unique_df['pulse_max']), axis=0)
+                    plt.axhline(median_pulse)
+
+                plt.plot(x_trace, median_values_filtered_df, label=f'Median {label}', linewidth=2)
+    if line is not None:
+        plt.axhline(line, color='red', label='Line')
+    plt.axvspan(1500, 1550, color='blue')
+    plt.axvspan(1620, 1670, color='red')
+
+    plt.legend()
+    plt.show()

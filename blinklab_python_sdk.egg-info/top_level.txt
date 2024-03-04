@@ -1,0 +1,2 @@
+blinklab_python_sdk
+tests
