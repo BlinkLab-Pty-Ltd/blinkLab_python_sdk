@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: blinklab-python-sdk
-Version: 0.1.2
+Version: v0.5
 Summary: Signal processing for Blinklab data
 Home-page: https://github.com/BlinkLab-Pty-Ltd/blinkLab_python_sdk
 Author: Peter Boele
@@ -19,9 +19,7 @@ and calculating various metrics.
 To install the SDK, run the following command:
 
 ```bash
-git clone https://gitlab.com/b3587/blinklab_py_sdk.git
-cd blinklab_py_sdk
-pip install -r requirements.txt
+pip3 install git+https://github.com/BlinkLab-Pty-Ltd/blinkLab_python_sdk.git
 ```
 
 ### Usage

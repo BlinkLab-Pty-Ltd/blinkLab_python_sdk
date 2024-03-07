@@ -10,4 +10,4 @@ blinklab_python_sdk.egg-info/dependency_links.txt
 blinklab_python_sdk.egg-info/requires.txt
 blinklab_python_sdk.egg-info/top_level.txt
 tests/__init__.py
-tests/functions.py
+tests/functions_test.py

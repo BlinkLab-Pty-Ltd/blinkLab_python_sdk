@@ -9,9 +9,7 @@ and calculating various metrics.
 To install the SDK, run the following command:
 
 ```bash
-git clone https://gitlab.com/b3587/blinklab_py_sdk.git
-cd blinklab_py_sdk
-pip install -r requirements.txt
+pip3 install git+https://github.com/BlinkLab-Pty-Ltd/blinkLab_python_sdk.git
 ```
 
 ### Usage
@@ -19,7 +17,7 @@ pip install -r requirements.txt
 To use this SDK, import the package and create a client:
 
 ```python
-from blinklab_py_sdk import sdk
+from blinklab_python_sdk import functions as sdk
 ```
 
 ### Documentation
