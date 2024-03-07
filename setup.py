@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='blinklab_python_sdk',
-    version='0.5',
+    version='0.6',
     author='Peter Boele',
     author_email='peter@blinklab.org',
     packages=find_packages(),

@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: blinklab-python-sdk
-Version: v0.5
+Version: v0.6
 Summary: Signal processing for Blinklab data
 Home-page: https://github.com/BlinkLab-Pty-Ltd/blinkLab_python_sdk
 Author: Peter Boele

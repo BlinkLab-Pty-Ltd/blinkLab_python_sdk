@@ -129,7 +129,7 @@ def baseline_correct_trace(trace):
     if trace is None:
         return None
 
-    return trace - np.mean(trace[:BASELINE_LENGTH])
+    return trace - np.nanmedian(trace[:BASELINE_LENGTH])
 
 
 def calculate_threshold(group, percentile):
