@@ -18,11 +18,54 @@ def update_config(**kwargs):
             raise ValueError(f"Unknown configuration variable: {key}")
 
 
+def split_csv_trace(x):
+    if x is None or pd.isna(x):
+        return None
+
+    if not isinstance(x, str):
+        return None
+
+    split_x = x[1:-1].split(',')
+
+    if split_x[0] == '':
+        return ['0'] + split_x[1:]
+    else:
+        return split_x
+
+
 def to_numeric_list(lst):
+    if lst is None:
+        return None
+
+    if not isinstance(lst, list):
+        return None
+
     try:
         return [float(item) for item in lst]
     except ValueError:
         return None
+
+
+def calculate_percentiles(group, column_name):
+    group[column_name] = group[column_name].replace([None], np.nan)
+
+    if group[column_name].isna().all():
+        max_percentile = None
+    else:
+        max_percentile = np.nanpercentile(
+            group[column_name],
+            PERCENTILE_THRESHOLD
+        )
+    return pd.Series({'max_percentile': max_percentile})
+
+
+def normalize_trace(trace, min_val, max_percentile):
+    if trace is None or min_val is None or max_percentile is None:
+        return None
+
+    range_val = max_percentile - min_val
+
+    return [(x - min_val) / range_val if range_val != 0 else 0 for x in trace]
 
 
 def make_label(entry):
@@ -82,15 +125,6 @@ def filter_trace(trace):
     return signal.filtfilt(b, a, trace)
 
 
-def normalize_trace(trace, min_val, max_percentile):
-    if trace is None:
-        return None
-
-    range_val = max_percentile - min_val
-
-    return [(x - min_val) / range_val if range_val != 0 else 0 for x in trace]
-
-
 def baseline_correct_trace(trace):
     if trace is None:
         return None
@@ -100,14 +134,6 @@ def baseline_correct_trace(trace):
 
 def calculate_threshold(group, percentile):
     return np.nanpercentile(group, percentile)
-
-
-def calculate_percentiles(group, column_name):
-    max_percentile = np.nanpercentile(
-        group[column_name],
-        PERCENTILE_THRESHOLD
-    )
-    return pd.Series({'max_percentile': max_percentile})
 
 
 def get_max(trace, begin, end):
