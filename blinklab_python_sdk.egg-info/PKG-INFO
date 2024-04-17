@@ -44,9 +44,6 @@ Checks if a trace has more NaN values than the allowable threshold. The threshol
 `has_extreme_outliers(trace)`
 Determines if a trace contains values that are considered extreme outliers.
 
-`is_short_trace(trace)`
-Evaluates if a trace is shorter than a defined length.
-
 `interpolate_trace(trace)`
 Interpolates a given trace to fill in missing data points.
 
@@ -59,21 +56,3 @@ Normalizes a trace based on provided minimum value and maximum percentile.
 `baseline_correct_trace(trace)`
 Applies baseline correction to a trace.
 
-`calculate_threshold(group, percentile)`
-Calculates the threshold value of a group at a specified percentile.
-
-`calculate_percentiles(group, column_name)`
-Calculates percentiles for a specified column in a group.
-
-`get_max(trace, begin, end)`
-Finds the maximum value in a trace within a specified time window.
-
-### Configuration
-
-The SDK can be configured by setting the following environment variables:
-
-```python
-sdk.update_config(MAX_NAN_COUNT=200, PPI_Y_MIN_EXTREME_OUTLIER=-10.0)
-```
-
-Check config.py for a full list of configurable variables.
