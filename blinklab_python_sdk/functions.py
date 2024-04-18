@@ -6,12 +6,63 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-PPI_Y_MIN_EXTREME_OUTLIER = -0.43  # cutoff for extreme outliers
-MAX_NAN_COUNT = 0.25  # 25% of the trace
-MS_PER_FRAME = 1 / 60 * 1000  # 16.666666666666667
+BASELINE_BLINK_THRESHOLD = 0.3
+BASELINE_DETECTION_WINDOW = 3
+TRACE_VALUE_LOWER_THRESHOLD = -0.12
+MIN_MAX_LOWER_PERCENTILE = 1
+MIN_MAX_UPPER_PERCENTILE = 99.9
+
+
+def remove_baseline_blinks(trace, baseline_length, sort_order):
+    """ Removes traces that contain baseline blinks"""
+    if trace is None:
+        return None
+
+    trace_array = np.array(trace)
+    baseline = trace_array[:baseline_length]
+    window = baseline[-BASELINE_DETECTION_WINDOW:]
+
+    for value in window:
+        if value > BASELINE_BLINK_THRESHOLD:
+            print(
+                f"trial: {sort_order} contains baseline blinks above {BASELINE_BLINK_THRESHOLD} "
+                f"({value}) (trace will be filtered out)")
+            return None
+    return trace
+
+
+def remove_traces_below_threshold(trace, sort_order):
+    """ Removes traces that contain values below the threshold"""
+    if trace is None:
+        return None
+
+    trace_array = np.array(trace)
+
+    for value in trace_array:
+        if value < TRACE_VALUE_LOWER_THRESHOLD:
+            print(
+                f"Trace {sort_order} contains values below {TRACE_VALUE_LOWER_THRESHOLD} "
+                f"({value}) (trace will be filtered out)")
+            return None
+
+    return trace
+
+
+def has_extreme_outliers(trace, threshold):
+    """ Checks if the trace contains extreme outliers"""
+    if trace is None:
+        return False
+
+    for element in trace:
+        is_outlier = element < threshold
+        if is_outlier:
+            return True
+
+    return False
 
 
 def cleanse_nan_trace(trace):
+    """ Cleanses the trace by removing all nan traces"""
     if trace is None:
         return None
 
@@ -21,7 +72,9 @@ def cleanse_nan_trace(trace):
     return trace
 
 
-def calculate_global_percentile_min_max(traces, lower_percentile=1, upper_percentile=99.9):
+def calculate_global_percentile_min_max(traces, lower_percentile=MIN_MAX_LOWER_PERCENTILE,
+                                        upper_percentile=MIN_MAX_UPPER_PERCENTILE):
+    """ Calculates the global min and max values of the traces"""
     valid_traces = [trace for trace in traces if trace is not None]
     if not valid_traces:
         return None, None
@@ -34,6 +87,7 @@ def calculate_global_percentile_min_max(traces, lower_percentile=1, upper_percen
 
 
 def percentile_min_max_scale_trace(trace, global_min, global_max, new_min=0, new_max=1):
+    """ Scales the trace based on the global min and max values"""
     range_val = global_max - global_min
 
     scaled_trace = [new_min + (x - global_min) * (new_max - new_min) / range_val if range_val != 0 else new_min for x in
@@ -43,50 +97,34 @@ def percentile_min_max_scale_trace(trace, global_min, global_max, new_min=0, new
 
 
 def calculate_nan_percentage(trace):
+    """ Calculates the percentage of nan values in a trace"""
     if trace is None:
         return 100
 
     return round(sum(np.isnan(trace)) / len(trace) * 100, 1)
 
 
-def baseline_correct_trace(trace, trial_sort_order, global_avg_baseline, baseline_length):
-    print()
-    print(f"baseline_correct_trace: trial: {trial_sort_order}")
-
+def baseline_correct_trace(trace, trial_sort_order, baseline_length):
+    """ Corrects the trace based on the baseline value"""
     if trace is None or np.all(np.isnan(trace)):
-        print("baseline_correct_trace: trace is None or all nans, returning None")
+        print(f"baseline_correct_trace: {trial_sort_order} is None or all nans, returning None")
         return None
+
+    trace = np.array(trace)
+    trace = trace + 10
 
     baseline = trace[:baseline_length]
     baseline_value = round(np.nanmedian(baseline), 4)
 
     if np.isnan(baseline_value):
-        print("baseline_correct_trace: baseline_value is nan, returning None")
+        print(f"baseline_correct_trace: {trial_sort_order} baseline_value is nan, returning None")
         return None
 
-    print(f"baseline_correct_trace: baseline_value {baseline_value}, global_avg_baseline {global_avg_baseline}")
-
-    if global_avg_baseline == 0:
-        print("baseline_correct_trace: global_avg_baseline is 0, returning trace")
-        return trace
-
-    percentage_diff = round(abs(baseline_value - global_avg_baseline) / abs(global_avg_baseline) * 100)
-    print(f"baseline_correct_trace: percentage_diff {percentage_diff}")
-
-    if percentage_diff > 20:
-        print("baseline_correct_trace: percentage_diff > 20, correcting based on global_avg_baseline")
-        correction_value = global_avg_baseline
-    else:
-        correction_value = baseline_value
-
-    return trace - correction_value
-
-
-def build_x_trace(length: int):
-    return np.arange(0, length * MS_PER_FRAME, MS_PER_FRAME)
+    return trace - baseline_value
 
 
 def split_csv_trace(x):
+    """ Splits a string of comma separated values into a list of strings"""
     if x is None or pd.isna(x):
         return None
 
@@ -102,6 +140,7 @@ def split_csv_trace(x):
 
 
 def to_numeric_list(lst):
+    """ Converts a list of strings to a list of floats"""
     if lst is None:
         return None
 
@@ -115,6 +154,7 @@ def to_numeric_list(lst):
 
 
 def normalize_trace(trace, min_val, max_percentile):
+    """ Normalizes the trace using min_val and max_percentile"""
     if trace is None or min_val is None or max_percentile is None:
         return None
 
@@ -124,6 +164,7 @@ def normalize_trace(trace, min_val, max_percentile):
 
 
 def make_label(entry):
+    """ Extracts the labels from the proto_trial_content"""
     try:
         content = json.loads(entry)
         labels = [f"{item['type']}: {item['summary']['volume']}" for item in content]
@@ -132,17 +173,8 @@ def make_label(entry):
         return str(e)
 
 
-def has_invalid_nan_count(trace):
-    if trace is None:
-        return True
-
-    max_nan_count = round(MAX_NAN_COUNT * len(trace))
-    nan_count = np.sum(np.isnan(trace))
-
-    return nan_count > max_nan_count
-
-
 def interpolate_trace(trace):
+    """ Interpolates the trace using linear interpolation """
     if trace is None:
         return None
 
@@ -150,6 +182,7 @@ def interpolate_trace(trace):
 
 
 def filter_trace(trace):
+    """ Filters the trace using a butterworth filter """
     if trace is None:
         return None
 

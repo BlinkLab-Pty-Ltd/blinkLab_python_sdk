@@ -2,3 +2,4 @@ venv
 .idea
 blinklab_python_sdk/__pycache__/
 tests/__pycache__/
+examples/.DS_Store
