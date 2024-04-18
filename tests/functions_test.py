@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from blinklab_python_sdk.functions import to_numeric_list, make_label, has_invalid_nan_count, \
+from blinklab_python_sdk.functions import to_numeric_list, make_label, \
     interpolate_trace, filter_trace, normalize_trace, baseline_correct_trace
 
 
@@ -23,14 +23,6 @@ class TestFunctions(unittest.TestCase):
     def test_make_label_with_valid_input(self):
         result = make_label(self.json_entry)
         self.assertEqual(result, 'type1: volume1, type2: volume2')
-
-    def test_has_invalid_nan_count_with_valid_input(self):
-        result = has_invalid_nan_count(self.trace)
-        self.assertFalse(result)
-
-    def test_has_invalid_nan_count_with_invalid_input(self):
-        result = has_invalid_nan_count(None)
-        self.assertTrue(result)
 
     def test_interpolate_trace_with_valid_input(self):
         result = interpolate_trace(self.trace)
@@ -57,11 +49,11 @@ class TestFunctions(unittest.TestCase):
         self.assertIsNone(result)
 
     def test_baseline_correct_trace_with_valid_input(self):
-        result = baseline_correct_trace(self.trace, 2, 0.2, 80)
+        result = baseline_correct_trace(self.trace, 2,  80)
         self.assertIsNotNone(result)
 
     def test_baseline_correct_trace_with_invalid_input(self):
-        result = baseline_correct_trace(None, 2, 0.2, 80)
+        result = baseline_correct_trace(None, 2,  80)
         self.assertIsNone(result)
 
 if __name__ == '__main__':
