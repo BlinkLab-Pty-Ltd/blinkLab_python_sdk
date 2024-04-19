@@ -7,7 +7,7 @@ warnings.filterwarnings("ignore")
 
 
 def preprocess(data: pd.DataFrame):
-    df = data[['proto_trial_content', 'proto_trial_hash', 'eye_lid_trace_leftEyeTrace', 'trial_sortOrder']].copy()
+    df = data[['proto_trial_content', 'proto_trial_hash', 'eye_lid_trace_leftEyeTrace', 'trial_sortOrder', 'session_trials_id']].copy()
     df.sort_values(by=['trial_sortOrder'], inplace=True)
 
     print()

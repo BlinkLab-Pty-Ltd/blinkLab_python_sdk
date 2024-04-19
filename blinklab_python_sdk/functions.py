@@ -207,6 +207,10 @@ def get_outlier_threshold(df, column_name, nr_baseline_samples):
     """ Calculates the outlier threshold based on the global mean and standard deviation"""
     global_mean_baseline = calculate_global_mean_baseline(df[column_name].dropna().tolist(), nr_baseline_samples)
     global_mean_sd = calculate_global_sd_baseline(df[column_name].dropna().tolist(), nr_baseline_samples)
+
+    if global_mean_baseline is None or global_mean_sd is None:
+        return -1
+
     threshold = global_mean_baseline - (3 * global_mean_sd)
 
     print(f"Global mean baseline: {global_mean_baseline} (SD={global_mean_sd}), outlier threshold: {threshold}")
