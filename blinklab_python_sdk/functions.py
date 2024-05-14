@@ -72,10 +72,10 @@ def calculate_global_percentile_min_max(traces, lower_percentile=MIN_MAX_LOWER_P
     return global_min, global_max
 
 
-def percentile_min_max_scale_trace(trace, global_min, global_max, new_min=0, new_max=1):
+def percentile_min_max_scale_trace(trace, global_max, new_min=0, new_max=1, global_min=0):
     """ Scales the trace based on the global min and max values"""
-    range_val = global_max - global_min
 
+    range_val = global_max - global_min
     scaled_trace = [new_min + (x - global_min) * (new_max - new_min) / range_val if range_val != 0 else new_min for x in
                     trace]
 
@@ -205,6 +205,8 @@ def calculate_global_sd_baseline(param, nr_baseline_samples):
 
 def get_outlier_threshold(df, column_name, nr_baseline_samples):
     """ Calculates the outlier threshold based on the global mean and standard deviation"""
+    default_threshold = -0.1
+
     global_mean_baseline = calculate_global_mean_baseline(df[column_name].dropna().tolist(), nr_baseline_samples)
     global_mean_sd = calculate_global_sd_baseline(df[column_name].dropna().tolist(), nr_baseline_samples)
 
@@ -212,7 +214,25 @@ def get_outlier_threshold(df, column_name, nr_baseline_samples):
         return -1
 
     threshold = global_mean_baseline - (3 * global_mean_sd)
-
     print(f"Global mean baseline: {global_mean_baseline} (SD={global_mean_sd}), outlier threshold: {threshold}")
 
+    if threshold > default_threshold:
+        print(f"Threshold above {default_threshold}, setting to {default_threshold}")
+        return default_threshold
+
     return threshold
+
+
+def get_baseline_frames(proto_trial_content):
+    proto_trial_content = json.loads(proto_trial_content)
+    starts = [item['summary']['start'] for item in proto_trial_content]
+    return round(min(starts) / (1000 / 60))
+
+
+def resample_trace(param, baseline_length, target_baseline_length):
+    if param is None:
+        return None
+    nr_samples_to_remove = round((baseline_length - target_baseline_length) / (1000 / 60))
+    print(f"Resampling trace: {nr_samples_to_remove} samples will be removed")
+
+    return param[nr_samples_to_remove:]
