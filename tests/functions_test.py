@@ -49,12 +49,13 @@ class TestFunctions(unittest.TestCase):
         self.assertIsNone(result)
 
     def test_baseline_correct_trace_with_valid_input(self):
-        result = baseline_correct_trace(self.trace, 2,  80)
+        result = baseline_correct_trace(self.trace, 2, 80)
         self.assertIsNotNone(result)
 
     def test_baseline_correct_trace_with_invalid_input(self):
-        result = baseline_correct_trace(None, 2,  80)
+        result = baseline_correct_trace(None, 2, 80)
         self.assertIsNone(result)
+
 
 if __name__ == '__main__':
     unittest.main()

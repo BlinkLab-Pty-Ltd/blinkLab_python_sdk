@@ -6,3 +6,6 @@ examples/.DS_Store
 examples/data/input/*
 examples/data/output/*
 examples/data/.DS_Store
+examples/__pycache__/
+examples/venv
+examples/data/group/*

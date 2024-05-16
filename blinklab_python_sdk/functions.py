@@ -203,9 +203,8 @@ def calculate_global_sd_baseline(param, nr_baseline_samples):
     return np.nanstd(concatenated_traces)
 
 
-def get_outlier_threshold(df, column_name, nr_baseline_samples):
+def get_outlier_threshold(df, column_name, nr_baseline_samples, default_threshold=-0.4):
     """ Calculates the outlier threshold based on the global mean and standard deviation"""
-    default_threshold = -0.1
 
     global_mean_baseline = calculate_global_mean_baseline(df[column_name].dropna().tolist(), nr_baseline_samples)
     global_mean_sd = calculate_global_sd_baseline(df[column_name].dropna().tolist(), nr_baseline_samples)
@@ -217,7 +216,7 @@ def get_outlier_threshold(df, column_name, nr_baseline_samples):
     print(f"Global mean baseline: {global_mean_baseline} (SD={global_mean_sd}), outlier threshold: {threshold}")
 
     if threshold > default_threshold:
-        print(f"Threshold above {default_threshold}, setting to {default_threshold}")
+        print(f"Threshold below {default_threshold}, setting to {default_threshold}")
         return default_threshold
 
     return threshold
@@ -233,6 +232,5 @@ def resample_trace(param, baseline_length, target_baseline_length):
     if param is None:
         return None
     nr_samples_to_remove = round((baseline_length - target_baseline_length) / (1000 / 60))
-    print(f"Resampling trace: {nr_samples_to_remove} samples will be removed")
 
     return param[nr_samples_to_remove:]
