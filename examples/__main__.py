@@ -57,20 +57,6 @@ def preprocess(data: pd.DataFrame):
     df['nan_percentage'] = df['eye_trace'].apply(sdk.calculate_nan_percentage)
     df['eye_trace'] = df.apply(lambda row: None if row['nan_percentage'] > 25 else row['eye_trace'], axis=1)
 
-    # #####
-    # # make traces same length, per proto_trial_hash take the min length and truncate the rest
-    # #####
-    # df['trace_length'] = df['eye_trace'].apply(lambda x: len(x) if x is not None else None)
-    # df['min_trace_length'] = df.groupby('proto_trial_hash')['trace_length'].transform('min').astype(int)
-    #
-    # print(df[['proto_trial_hash', 'min_trace_length']].drop_duplicates())
-    #
-    # df['eye_trace'] = df.apply(
-    #     lambda row: row['eye_trace'][:row['min_trace_length']] if row['eye_trace'] is not None else None, axis=1)
-    # df['max_trace_length'] = df.groupby('proto_trial_hash')['trace_length'].transform('max').astype(int)
-    #
-    # print(df[['proto_trial_hash', 'max_trace_length']].drop_duplicates())
-
     ######
     # Process eye_trace
     ######
@@ -134,7 +120,7 @@ def preprocess(data: pd.DataFrame):
         ),
         axis=1)
 
-    threshold = sdk.get_outlier_threshold(df, 'second_baseline_corrected_trace', NR_BASELINE_SAMPLES, -0.4)
+    threshold = sdk.get_outlier_threshold(df, 'second_baseline_corrected_trace', NR_BASELINE_SAMPLES, -0.35)
 
     ##### Remove traces below threshold
     df['second_baseline_corrected_trace_removed_outliers'] = df.apply(

@@ -6,7 +6,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-BASELINE_BLINK_THRESHOLD = 0.2
+BASELINE_BLINK_THRESHOLD = 0.15
 BASELINE_DETECTION_WINDOW = 6
 MIN_MAX_LOWER_PERCENTILE = 1
 MIN_MAX_UPPER_PERCENTILE = 99.9
@@ -18,7 +18,7 @@ def remove_baseline_blinks(trace, baseline_length, sort_order):
         return None
 
     trace_array = np.array(trace)
-    baseline = trace_array[:baseline_length + 1]
+    baseline = trace_array[:baseline_length + 2]
     window = baseline[-BASELINE_DETECTION_WINDOW:]
 
     for value in window:
@@ -83,11 +83,11 @@ def percentile_min_max_scale_trace(trace, global_max, new_min=0, new_max=1, glob
 
 
 def calculate_nan_percentage(trace):
-    """ Calculates the percentage of nan values in the first 70% of a trace"""
+    """ Calculates the percentage of nan values in the first 50% of a trace"""
     if trace is None:
         return 100
 
-    cut_off_index = int(len(trace) * 0.70)
+    cut_off_index = int(len(trace) * 0.50)
     truncated_trace = trace[:cut_off_index]
 
     return round(sum(np.isnan(truncated_trace)) / len(truncated_trace) * 100, 1)
